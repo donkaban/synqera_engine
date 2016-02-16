@@ -1,0 +1,44 @@
+import os
+import QBuild
+
+Import('local_env')
+
+deps          = ['#PugiXml','#libFreetype','#gpc']
+common_static = ['pugiXml','freetype_static','gpc']
+common_shared = ['X11','pthread','z']
+
+platforms = {
+    'macos' : {   
+        'Shared' : common_shared + ['GL'],
+        'Static' : common_static,    
+    },
+    'linux32' : {   
+        'Shared' : common_shared + ['GLESv2','EGL','openal'],
+        'Static' : common_static,    
+    },
+    'linux64' : {   
+        'Shared' : common_shared + ['GLESv2','EGL', 'openal'],
+        'Static' : common_static,    
+    },
+    'android' : {
+        'Shared' : ['GLESv2','EGL','log','android','OpenSLES','z'],
+        'Static' : common_static + ['c','m','gcc','gnustl_static','supc++'],    
+    }
+}
+
+sources = QBuild.SimplateGlob(local_env,['*.cpp'])
+for fname in os.listdir(os.path.join(local_env.MODULE_DIR, 'Source')):
+    sources += QBuild.SimplateGlob(local_env, [fname + '/*.cpp'])
+
+Result = QBuild.SimplateSharedLibrary(
+    local_env,
+    target       = 'TheEngine.so', 
+    sources      = sources,
+    dependencies = deps,
+    static_libs  = platforms[local_env.TARGET]['Static'],
+    shared_libs  = platforms[local_env.TARGET]['Shared'],
+    enableWarnings = True 
+)
+
+    
+Return('Result')
